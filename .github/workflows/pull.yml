@@ -1,0 +1,32 @@
+name: Docker Pull
+on:
+  workflow_dispatch:
+    inputs:
+      server_host:
+        description: Server host
+        required: true
+        type: string
+      concurrency:
+        description: Concurrency
+        default: 1024
+        type: number
+      exit_after_jobs_completed:
+        description: After how many jobs to exit
+        default: 10000
+        type: number
+jobs:
+  main:
+    name: Docker Pull
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set port range
+        run: sudo sysctl -w net.ipv4.ip_local_port_range="1024 65535"
+      - name: Download dependencies
+        run: sleep $(shuf -i 1-20 -n 1)
+        if: ${{ inputs.exit_after_jobs_completed == 0  }}
+      - name: Run
+        run: ./worker --exit-after-jobs-completed ${{ inputs.exit_after_jobs_completed }} --server-host ${{ inputs.server_host }} --concurrency ${{ inputs.concurrency }}
+        if: ${{ inputs.exit_after_jobs_completed != 0 }}
